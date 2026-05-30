@@ -685,19 +685,22 @@ app.get('*', (req, res) => {
 
 // ── START SERVER ──────────────────────────────────────────────
 const mongoose = require('mongoose');
-mongoose.connection.once('open', async () => {
-  await seedDefaults();
+let serverStarted = false;
+
+function startServer() {
+  if (serverStarted) return;
+  serverStarted = true;
   app.listen(PORT, () => {
     console.log(`\n🚀 A.R. Library (MongoDB) running on port ${PORT}`);
     console.log(`🌐 Open: http://localhost:${PORT}`);
   });
+}
+
+mongoose.connection.once('open', async () => {
+  await seedDefaults();
+  startServer();
 });
 
-// Agar 10 second mein connect na ho toh bhi start karo
 setTimeout(() => {
-  if (!app.listening) {
-    app.listen(PORT, () => {
-      console.log(`⚠️  Started without confirmed DB — port ${PORT}`);
-    });
-  }
+  startServer();
 }, 10000);
